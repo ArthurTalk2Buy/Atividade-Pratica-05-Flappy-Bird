@@ -20,10 +20,10 @@ export default function App() {
             animation: 'slide_from_right',
           }}
         >
-          <Stack.Screen name="Inicio" component={Tela1} />
-          <Stack.Screen name="Texto" component={Tela2} />
-          <Stack.Screen name="Resultado" component={Tela3} />
-          <Stack.Screen name="Palindromos" component={Tela4} />
+          <Stack.Screen name="BoasVindas" component={Tela1} />
+          <Stack.Screen name="Instrucoes" component={Tela2} />
+          <Stack.Screen name="Jogo" component={Tela3} />
+          <Stack.Screen name="Creditos" component={Tela4} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

@@ -1,5 +1,5 @@
 {
-  "name": "atividade-pratica-04-texto",
+  "name": "atividade-pratica-05-flappy-bird",
   "version": "1.0.0",
   "private": true,
   "main": "expo/AppEntry.js",
@@ -15,6 +15,7 @@
     "@react-navigation/native-stack": "^6.11.0",
     "expo": "~52.0.49",
     "expo-asset": "~11.0.5",
+    "expo-av": "~15.0.2",
     "expo-linear-gradient": "~14.0.2",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
