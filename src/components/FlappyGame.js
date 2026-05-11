@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Audio } from 'expo-av';
 
+import GameBird, { BIRD_VISUAL_H, BIRD_VISUAL_W } from './GameBird';
+
 const { width: SCREEN_W } = Dimensions.get('window');
+
+const BIRD_W = BIRD_VISUAL_W;
+const BIRD_H = BIRD_VISUAL_H;
 
 const SOUND_FLAP = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
 const SOUND_POINT = 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3';
@@ -12,9 +17,7 @@ const G = 920;
 const FLAP_V = -420;
 const PIPE_SPEED = 195;
 const PIPE_W = 54;
-const BIRD_W = 36;
-const BIRD_H = 30;
-const HIT_INSET = 6;
+const HIT_INSET = 5;
 
 function randomGapTop(laneH, gap) {
   const margin = 56;
@@ -316,14 +319,15 @@ export default function FlappyGame({ mode, soundEnabled }) {
         ))}
         <View
           style={[
-            styles.bird,
+            styles.birdWrap,
             {
               left: birdX - BIRD_W / 2,
               top: p.y - BIRD_H / 2,
-              opacity: p.alive ? 1 : 0.35,
             },
           ]}
-        />
+        >
+          <GameBird vy={p.vy} dimmed={!p.alive} />
+        </View>
         {twoPlayers && (
           <View style={styles.laneTag}>
             <Text style={styles.laneTagText}>Jogador {playerIndex + 1}</Text>
@@ -418,15 +422,13 @@ function checkCollisions(p, laneH, birdX) {
 }
 
 function LinearLaneBackground({ variant }) {
-  const top = variant === 'a' ? '#0ea5e9' : '#7c3aed';
-  const bottom = variant === 'a' ? '#0369a1' : '#5b21b6';
+  const sky = variant === 'a' ? '#71C5CF' : '#63ADC0';
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: bottom }]}>
-      <View style={{ flex: 1, backgroundColor: top, opacity: 0.55 }} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: sky }]}>
       <View style={styles.cloudRow}>
-        <View style={[styles.cloud, { left: '8%' }]} />
-        <View style={[styles.cloud, { left: '42%' }]} />
-        <View style={[styles.cloud, { left: '72%' }]} />
+        <View style={[styles.cloud, { left: '6%', top: '14%' }]} />
+        <View style={[styles.cloud, { left: '38%', top: '22%', opacity: 0.92 }]} />
+        <View style={[styles.cloud, { left: '70%', top: '12%' }]} />
       </View>
     </View>
   );
@@ -435,7 +437,7 @@ function LinearLaneBackground({ variant }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#4a9bab',
   },
   hud: {
     paddingHorizontal: 14,
@@ -444,9 +446,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   hudText: {
-    color: '#f8fafc',
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   field: {
     flex: 1,
@@ -457,68 +462,65 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   divider: {
-    height: 3,
-    backgroundColor: '#fbbf24',
+    height: 4,
+    backgroundColor: '#DED895',
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#C4B87A',
   },
   pipe: {
     position: 'absolute',
     borderRadius: 6,
   },
   pipeFill: {
-    backgroundColor: '#22c55e',
-    borderWidth: 2,
-    borderColor: '#14532d',
+    backgroundColor: '#73BF2E',
+    borderWidth: 3,
+    borderColor: '#546B2C',
   },
   pipeLip: {
     position: 'absolute',
     height: 18,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#6CAD2A',
     borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#14532d',
+    borderWidth: 3,
+    borderColor: '#546B2C',
   },
-  bird: {
+  birdWrap: {
     position: 'absolute',
     width: BIRD_W,
     height: BIRD_H,
-    borderRadius: 10,
-    backgroundColor: '#fbbf24',
-    borderWidth: 3,
-    borderColor: '#b45309',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   laneTag: {
     position: 'absolute',
     top: 8,
     right: 10,
-    backgroundColor: 'rgba(15,23,42,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(84,107,44,0.5)',
   },
   laneTagText: {
-    color: '#fef9c3',
+    color: '#1a2e05',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   cloudRow: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
   },
   cloud: {
     position: 'absolute',
-    top: '18%',
-    width: 64,
-    height: 22,
+    width: 76,
+    height: 28,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15,23,42,0.78)',
+    backgroundColor: 'rgba(25, 70, 78, 0.88)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -551,13 +553,15 @@ const styles = StyleSheet.create({
   },
   startBtn: {
     marginTop: 18,
-    backgroundColor: '#f97316',
+    backgroundColor: '#E86A17',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#5c2f0a',
   },
   startBtnText: {
-    color: '#0f172a',
+    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '900',
   },

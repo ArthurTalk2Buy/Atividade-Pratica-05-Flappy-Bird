@@ -4,26 +4,29 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const VARIANTS = {
+  sky: ['#38bdf8', '#6366f1', '#a855f7'],
+  night: ['#0f172a', '#1e293b', '#312e81'],
+  flappy: ['#71C5CF', '#8FD4E0', '#B8E8F0'],
+};
+
 export function AppShell({ children, variant = 'sky' }) {
-  const colors = variant === 'night' ? ['#0f172a', '#1e293b', '#312e81'] : ['#38bdf8', '#6366f1', '#a855f7'];
+  const colors = VARIANTS[variant] || VARIANTS.sky;
   return (
     <LinearGradient colors={colors} style={styles.gradient}>
-      <StatusBar style="light" />
+      <StatusBar style={variant === 'night' ? 'light' : 'dark'} />
       <View pointerEvents="none" style={styles.decorLayer}>
         <View style={[styles.orb, styles.orbTop]} />
         <View style={[styles.orb, styles.orbBottom]} />
+        {(variant === 'flappy' || variant === 'sky') && (
+          <>
+            <View style={[styles.cloudSoft, { top: '8%', left: '5%' }]} />
+            <View style={[styles.cloudSoft, { top: '14%', right: '8%', opacity: 0.9 }]} />
+          </>
+        )}
       </View>
       <SafeAreaView style={styles.safeArea}>{children}</SafeAreaView>
     </LinearGradient>
-  );
-}
-
-export function StepBadge({ step, label }) {
-  return (
-    <View style={styles.stepBadge}>
-      <Text style={styles.stepNumber}>Tela {step}</Text>
-      <Text style={styles.stepLabel}>{label}</Text>
-    </View>
   );
 }
 
@@ -31,7 +34,7 @@ export function PrimaryButton({ children, onPress, variant = 'primary' }) {
   return (
     <TouchableOpacity activeOpacity={0.88} onPress={onPress} style={styles.buttonShadow}>
       <LinearGradient
-        colors={variant === 'primary' ? ['#fbbf24', '#f97316'] : ['#FFFFFF', '#e0f2fe']}
+        colors={variant === 'primary' ? ['#E86A17', '#f97316'] : ['#FFFFFF', '#e8f8fa']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.button}
@@ -41,6 +44,17 @@ export function PrimaryButton({ children, onPress, variant = 'primary' }) {
         </Text>
       </LinearGradient>
     </TouchableOpacity>
+  );
+}
+
+export function ScreenTitle({ title, subtitle, light }) {
+  return (
+    <View style={styles.screenTitleBlock}>
+      <Text style={[styles.screenTitle, light && styles.screenTitleOnDark]}>{title}</Text>
+      {subtitle ? (
+        <Text style={[styles.screenSubtitle, light && styles.screenSubtitleOnDark]}>{subtitle}</Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -69,6 +83,13 @@ export const styles = StyleSheet.create({
     left: -100,
     width: 240,
   },
+  cloudSoft: {
+    position: 'absolute',
+    width: 80,
+    height: 28,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+  },
   safeArea: {
     flex: 1,
   },
@@ -80,27 +101,29 @@ export const styles = StyleSheet.create({
     paddingBottom: 34,
     gap: 18,
   },
-  stepBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.35)',
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  screenTitleBlock: {
+    marginBottom: 6,
   },
-  stepNumber: {
-    color: '#fef08a',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  stepLabel: {
+  screenTitle: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 2,
+    fontSize: 28,
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  screenTitleOnDark: {
+    textShadowColor: 'rgba(0,0,0,0.4)',
+  },
+  screenSubtitle: {
+    marginTop: 6,
+    color: 'rgba(15, 60, 70, 0.85)',
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  screenSubtitleOnDark: {
+    color: 'rgba(226, 232, 240, 0.92)',
   },
   heroCard: {
     alignItems: 'center',
@@ -170,7 +193,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   buttonText: {
-    color: '#422006',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '900',
   },

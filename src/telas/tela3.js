@@ -1,37 +1,8 @@
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FlappyGame from '../components/FlappyGame';
-
-const styles = {
-  wrap: { flex: 1, backgroundColor: '#0f172a' },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(148,163,184,0.35)',
-  },
-  back: { color: '#e2e8f0', fontWeight: '800', padding: 8 },
-  toggles: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 },
-  pill: {
-    backgroundColor: 'rgba(30,41,59,0.95)',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(148,163,184,0.45)',
-  },
-  pillOn: {
-    backgroundColor: 'rgba(249,115,22,0.25)',
-    borderColor: '#fb923c',
-  },
-  pillText: { color: '#f8fafc', fontSize: 12, fontWeight: '900' },
-};
 
 export default function Tela3({ navigation }) {
   const [mode, setMode] = useState('1p');
@@ -59,3 +30,51 @@ export default function Tela3({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: {
+    flex: 1,
+    backgroundColor: '#5fb0c4',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderBottomWidth: 3,
+    borderBottomColor: '#546B2C',
+  },
+  back: {
+    color: '#1a2e05',
+    fontWeight: '900',
+    padding: 8,
+    fontSize: 16,
+  },
+  toggles: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  pill: {
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: '#546B2C',
+  },
+  pillOn: {
+    backgroundColor: '#DED895',
+    borderColor: '#5c2f0a',
+  },
+  pillText: {
+    color: '#1a2e05',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+});
