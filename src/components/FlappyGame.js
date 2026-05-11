@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Audio } from 'expo-av';
 
 import GameBird, { BIRD_VISUAL_H, BIRD_VISUAL_W } from './GameBird';
@@ -13,20 +13,27 @@ const SOUND_FLAP = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-previe
 const SOUND_POINT = 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3';
 const SOUND_HIT = 'https://assets.mixkit.co/active_storage/sfx/2652/2652-preview.mp3';
 
-const G = 920;
-const FLAP_V = -420;
-const PIPE_SPEED = 195;
+const G = 650;
+const FLAP_V = -340;
+const PIPE_SPEED = 138;
 const PIPE_W = 54;
-const HIT_INSET = 5;
+const HIT_INSET = 7;
+const PIPE_SPAWN_AT = 0.44;
+
+const HUD_MONO = Platform.select({
+  ios: 'Menlo',
+  android: 'monospace',
+  default: 'monospace',
+});
 
 function randomGapTop(laneH, gap) {
-  const margin = 56;
+  const margin = 44;
   const max = laneH - gap - margin;
   return margin + Math.random() * Math.max(1, max - margin);
 }
 
 function createPipe(laneW, laneH) {
-  const gap = 128 + Math.random() * 28;
+  const gap = 158 + Math.random() * 42;
   return {
     x: laneW + 24,
     gapTop: randomGapTop(laneH, gap),
@@ -45,7 +52,7 @@ function createPlayer(laneW, laneH) {
   };
 }
 
-export default function FlappyGame({ mode, soundEnabled }) {
+export default function FlappyGame({ mode, soundEnabled, onLeaveToMenu }) {
   const twoPlayers = mode === '2p';
   const layoutRef = useRef({ w: SCREEN_W, h: 520, laneH: 520 });
   const [, setRenderTick] = useState(0);
@@ -117,6 +124,14 @@ export default function FlappyGame({ mode, soundEnabled }) {
     lastTRef.current = null;
   }, []);
 
+  const handleMenu = useCallback(() => {
+    stopLoop();
+    stateRef.current.running = false;
+    stateRef.current.over = false;
+    forceUpdate();
+    onLeaveToMenu?.();
+  }, [stopLoop, forceUpdate, onLeaveToMenu]);
+
   const tick = useCallback(
     (time) => {
       const s = stateRef.current;
@@ -143,7 +158,7 @@ export default function FlappyGame({ mode, soundEnabled }) {
         }
 
         const last = p.pipes[p.pipes.length - 1];
-        if (last.x < w * 0.62) {
+        if (last.x < w * PIPE_SPAWN_AT) {
           p.pipes.push(createPipe(w, lh));
         }
         if (p.pipes[0].x + PIPE_W < -20) {
@@ -330,7 +345,8 @@ export default function FlappyGame({ mode, soundEnabled }) {
         </View>
         {twoPlayers && (
           <View style={styles.laneTag}>
-            <Text style={styles.laneTagText}>Jogador {playerIndex + 1}</Text>
+            <Text style={styles.laneTagKicker}>Pista</Text>
+            <Text style={styles.laneTagText}>Jog. {playerIndex + 1}</Text>
           </View>
         )}
       </View>
@@ -349,9 +365,29 @@ export default function FlappyGame({ mode, soundEnabled }) {
 
   return (
     <View style={styles.root}>
-      <View style={styles.hud} pointerEvents="none">
-        <Text style={styles.hudText}>Pontos: {scoresText}</Text>
-        <Text style={styles.hudText}>Tempo: {timeLabel}</Text>
+      <View style={styles.hudRow} pointerEvents="box-none">
+        <View style={styles.hudCluster} pointerEvents="none">
+          <View style={styles.hudCard}>
+            <Text style={styles.hudLabel}>Pontos</Text>
+            <Text style={styles.hudValue} numberOfLines={1}>
+              {scoresText}
+            </Text>
+          </View>
+          <View style={styles.hudCard}>
+            <Text style={styles.hudLabel}>Tempo</Text>
+            <Text style={styles.hudValue}>{timeLabel}</Text>
+          </View>
+        </View>
+        {typeof onLeaveToMenu === 'function' ? (
+          <Pressable
+            onPress={handleMenu}
+            style={({ pressed }) => [styles.hudMenuBtn, pressed && styles.hudMenuBtnPressed]}
+            hitSlop={8}
+          >
+            <Text style={styles.hudMenuIcon}>⌂</Text>
+            <Text style={styles.hudMenuLabel}>Início</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <Pressable
@@ -381,18 +417,32 @@ export default function FlappyGame({ mode, soundEnabled }) {
           <Pressable style={styles.startBtn} onPress={startGame}>
             <Text style={styles.startBtnText}>Iniciar</Text>
           </Pressable>
+          {typeof onLeaveToMenu === 'function' ? (
+            <Pressable style={styles.secondaryBtn} onPress={handleMenu}>
+              <Text style={styles.secondaryBtnText}>Voltar ao menu</Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
 
       {s.over && (
         <View style={styles.overlay} pointerEvents="box-none">
           <Text style={styles.overlayTitle}>Fim de jogo</Text>
-          <Text style={styles.overlayStat}>Pontuação: {scoresText}</Text>
-          <Text style={styles.overlayStat}>Tempo: {timeLabel}</Text>
+          <View style={styles.overlayScoreCard}>
+            <Text style={styles.overlayStatLabel}>Pontuação</Text>
+            <Text style={styles.overlayStatBig}>{scoresText}</Text>
+            <Text style={styles.overlayStatLabel}>Tempo</Text>
+            <Text style={styles.overlayStatBig}>{timeLabel}</Text>
+          </View>
           {winner && <Text style={styles.overlayWinner}>{winner}</Text>}
           <Pressable style={styles.startBtn} onPress={startGame}>
             <Text style={styles.startBtnText}>Jogar de novo</Text>
           </Pressable>
+          {typeof onLeaveToMenu === 'function' ? (
+            <Pressable style={styles.secondaryBtn} onPress={handleMenu}>
+              <Text style={styles.secondaryBtnText}>Menu inicial</Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
     </View>
@@ -439,19 +489,76 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#4a9bab',
   },
-  hud: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  hudRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingTop: 6,
+    paddingBottom: 8,
+    gap: 10,
   },
-  hudText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  hudCluster: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  hudCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 2,
+    borderColor: '#546B2C',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  hudLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#546B2C',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  hudValue: {
+    marginTop: 2,
+    fontSize: 22,
     fontWeight: '900',
-    textShadowColor: 'rgba(0,0,0,0.25)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: '#1a2e05',
+    fontFamily: HUD_MONO,
+    letterSpacing: Platform.OS === 'ios' ? -1 : 0,
+  },
+  hudMenuBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E86A17',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: '#5c2f0a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 64,
+  },
+  hudMenuBtnPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }],
+  },
+  hudMenuIcon: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '900',
+    marginBottom: 2,
+  },
+  hudMenuLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   field: {
     flex: 1,
@@ -496,17 +603,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 10,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: 'rgba(84,107,44,0.5)',
+    borderColor: '#546B2C',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  laneTagKicker: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#546B2C',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   laneTagText: {
     color: '#1a2e05',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '900',
+    fontFamily: HUD_MONO,
+    marginTop: 1,
   },
   cloudRow: {
     ...StyleSheet.absoluteFillObject,
@@ -520,49 +640,88 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25, 70, 78, 0.88)',
+    backgroundColor: 'rgba(25, 70, 78, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   overlayTitle: {
-    color: '#fef08a',
-    fontSize: 28,
+    color: '#FFF9C4',
+    fontSize: 32,
     fontWeight: '900',
-    marginBottom: 10,
+    marginBottom: 8,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   overlayHint: {
-    color: '#e2e8f0',
+    color: '#e8f4f6',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 20,
+    fontWeight: '600',
   },
-  overlayStat: {
-    color: '#f1f5f9',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 4,
+  overlayScoreCard: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+  },
+  overlayStatLabel: {
+    color: 'rgba(232,244,246,0.85)',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginTop: 6,
+  },
+  overlayStatBig: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '900',
+    fontFamily: HUD_MONO,
+    marginTop: 2,
   },
   overlayWinner: {
-    color: '#4ade80',
+    color: '#86efac',
     fontSize: 20,
     fontWeight: '900',
-    marginTop: 14,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   startBtn: {
-    marginTop: 18,
+    marginTop: 16,
     backgroundColor: '#E86A17',
-    paddingHorizontal: 28,
-    paddingVertical: 14,
+    paddingHorizontal: 32,
+    paddingVertical: 15,
     borderRadius: 16,
     borderWidth: 3,
     borderColor: '#5c2f0a',
+    minWidth: 220,
+    alignItems: 'center',
   },
   startBtnText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  secondaryBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  secondaryBtnText: {
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 16,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
   },
 });
